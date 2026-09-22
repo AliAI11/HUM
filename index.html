@@ -266,16 +266,6 @@ document.getElementById("teamGrid").innerHTML = TEAM.map(p => `<div>
   <div class="m">${p.major}<br>${CAMPUS}</div>
   <a href="mailto:${p.e}">${p.e}</a></div>`).join("");
 
-// preview-only guard: documents open for real once hosted on GitHub Pages
-const toast = document.getElementById("toast");
-document.addEventListener("click", e => {
-  const a = e.target.closest("a.doc-link");
-  if (a && !/github\.io$/.test(location.hostname)) {
-    e.preventDefault(); toast.textContent = "On GitHub Pages this opens " + a.getAttribute("href");
-    toast.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(()=>toast.classList.remove("show"), 2600);
-  }
-});
-
 // sticky nav border + theme toggle
 const nav = document.getElementById("nav");
 addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 8), {passive:true});
