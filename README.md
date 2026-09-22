@@ -2,8 +2,6 @@
 
 <img src="images/banner.jpg" alt="HUM: Hear, Understand, Match" width="100%">
 
-# HUM
-**Hear · Understand · Match**
 
 A model that scores how well generated audio matches its text prompt, built to stay accurate on audio from generators it has never heard.
 
