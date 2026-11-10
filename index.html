@@ -79,7 +79,8 @@ section.block{padding:72px 0 0}
 .two{display:grid;grid-template-columns:1fr 1.25fr;gap:48px}
 .statement{font-size:clamp(22px,2.8vw,28px);line-height:1.18;letter-spacing:-.025em;font-weight:600;margin:0}
 
-.docs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.docs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media (max-width:900px){.docs{grid-template-columns:repeat(3,1fr)}}
 .doc{display:flex;flex-direction:column;justify-content:space-between;gap:28px;min-height:128px;padding:18px;border:1px solid var(--line);border-radius:14px;text-decoration:none;position:relative}
 .doc strong{font-size:17px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
 .doc span{font-size:13px;color:var(--mute);display:flex;justify-content:space-between;align-items:center}
@@ -158,7 +159,7 @@ footer a{color:var(--ink)}
     <h1>Hear, Understand, Match</h1>
     <p class="lede">A model that scores how well generated audio matches its text prompt, built to stay accurate on audio from generators it has never heard.</p>
     <div class="cta">
-      <a class="btn pri doc-link" href="reports/Checkpoint1_Ali_Guzman_Yilmaz_Merino.pdf">Read the checkpoint report</a>
+      <a class="btn pri" id="cta-report" href="#documents">Read our reports</a>
       <a class="btn" href="https://xacle.org/2027/" target="_blank" rel="noopener">XACLE 2027 challenge <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 8.5l5-5M4.5 3.5h4v4"/></svg></a>
       <a class="btn" href="https://github.com/AliAI11/HUM" target="_blank" rel="noopener">Code on GitHub <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 8.5l5-5M4.5 3.5h4v4"/></svg></a>
     </div>
@@ -228,11 +229,14 @@ footer a{color:var(--ink)}
 
 <script>
 /* ---------- edit content here ---------- */
+// A card turns into a live "Read PDF" link by itself once its PDF is uploaded to the repo.
+// Until then it shows "Available <date>" (or "Coming soon" after that date).
 const DOCS = [
-  {t:"Project proposal",  d:"2026-09-22", href:"reports/Proposal_Ali_Guzman_Yilmaz_Merino.pdf"},
-  {t:"Checkpoint I report", d:"2026-10-20", href:"reports/Checkpoint1_Ali_Guzman_Yilmaz_Merino.pdf"},
-  {t:"Final report",      d:"2026-12-11", href:"reports/final.pdf"},
-  {t:"Project summary",   d:"2026-12-11", href:"reports/summary.pdf"}
+  {t:"Project proposal",     d:"2026-09-22", href:"reports/Proposal_Ali_Guzman_Yilmaz_Merino.pdf",    cta:"Read the proposal"},
+  {t:"Checkpoint I report",  d:"2026-10-20", href:"reports/Checkpoint1_Ali_Guzman_Yilmaz_Merino.pdf", cta:"Read the Checkpoint I report"},
+  {t:"Checkpoint II report", d:"2026-11-10", href:"reports/Checkpoint2_Ali_Guzman_Yilmaz_Merino.pdf", cta:"Read the Checkpoint II report"},
+  {t:"Final report",         d:"2026-12-11", href:"reports/final.pdf",                                cta:"Read the final report"},
+  {t:"Project summary",      d:"2026-12-11", href:"reports/summary.pdf"}
 ];
 const TEAM = [
   {n:"Afeef Ali", role:"", major:"Computer Science", e:"aali11@vt.edu", photo:"images/afeef.jpg"},
@@ -251,9 +255,29 @@ const fmt = iso => new Date(iso+"T12:00").toLocaleDateString("en-US",{month:"sho
 const today = new Date();
 const arrow = '<svg viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 8.5l5-5M4.5 3.5h4v4"/></svg>';
 
-document.getElementById("docs").innerHTML = DOCS.map(d => d.href
-  ? `<a class="doc doc-link" href="${d.href}" target="_blank" rel="noopener"><strong>${d.t}</strong><span>Read PDF ${arrow}</span></a>`
-  : `<div class="doc" aria-disabled="true"><strong>${d.t}</strong><span>Available ${fmt(d.d)}</span></div>`).join("");
+const isPast = iso => new Date(iso+"T00:00") <= today;
+const live = DOCS.map(d => !!d.href && isPast(d.d));      // first guess from the date
+const docsEl = document.getElementById("docs");
+function renderDocs(){
+  docsEl.innerHTML = DOCS.map((d,i) => live[i]
+    ? `<a class="doc doc-link" href="${d.href}" target="_blank" rel="noopener"><strong>${d.t}</strong><span>Read PDF ${arrow}</span></a>`
+    : `<div class="doc" aria-disabled="true"><strong>${d.t}</strong><span>${isPast(d.d) ? "Coming soon" : "Available " + fmt(d.d)}</span></div>`).join("");
+  // hero button -> newest uploaded report
+  const cta = document.getElementById("cta-report");
+  for (let i = DOCS.length - 1; i >= 0; i--) {
+    if (live[i] && DOCS[i].cta) { cta.href = DOCS[i].href; cta.textContent = DOCS[i].cta; break; }
+  }
+}
+renderDocs();
+// confirm against the real files (works on GitHub Pages; skipped when opened as a local file)
+if (location.protocol.startsWith("http")) {
+  DOCS.forEach((d,i) => {
+    if (!d.href) return;
+    fetch(d.href, {method:"HEAD", cache:"no-store"})
+      .then(res => { if (res.ok !== live[i]) { live[i] = res.ok; renderDocs(); } })
+      .catch(() => {});
+  });
+}
 
 const nextIdx = MILESTONES.findIndex(([d]) => new Date(d+"T23:59") >= today);
 document.getElementById("time").innerHTML = MILESTONES.map(([d,t],i) =>
